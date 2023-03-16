@@ -1,0 +1,42 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "beautiful": "prettier --single-quote --trailing-comma all --write 'routers/**/*.{js, scss}'",
+    "start": "nodemon src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "body-parser": "^1.20.1",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "googleapis": "^110.0.0",
+    "gridfs-stream": "^1.1.1",
+    "helmet": "^6.0.1",
+    "http-errors": "^2.0.0",
+    "ioredis": "^5.2.4",
+    "joi": "^17.7.0",
+    "jsonwebtoken": "^9.0.0",
+    "mongoose": "^6.8.3",
+    "multer": "^1.4.4",
+    "multer-gridfs-storage": "^5.0.2",
+    "nodemailer": "^6.9.1",
+    "redis": "^4.5.1",
+    "socket.io": "^4.6.0",
+    "twilio": "^4.7.2",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "husky": "^8.0.3",
+    "lint-staged": "^13.1.0",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.20",
+    "prettier": "^2.8.2"
+  }
+}
