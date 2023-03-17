@@ -1,9 +1,10 @@
 "use strict";
-// define functions
+// Models
 const UserModel = require("../models/UserModel");
-const UserService = require("../services/UserService");
 const UserVerificationModel = require("../models/UserVerificationModel");
-const validation = require("../helpers/validation");
+
+// Services
+const UserService = require("../services/UserService");
 const jwtService = require("../services/jwt_service");
 const {
   whitelist,
@@ -15,6 +16,9 @@ const {
   removeTokenToRedisClient,
 } = require("../services/redis_service");
 const emailService = require("../services/email_service");
+
+// Utils
+const validation = require("../helpers/validation");
 const createError = require("http-errors");
 const statusCode = require("../helpers/StatusCode");
 const capitalizeFirstLetter = require("../helpers/user_format");

@@ -117,9 +117,11 @@ const UserSchema = new Schema(
       type: Boolean,
       default: false,
     },
+    friends: [{ type: Schema.Types.ObjectId, ref: 'friends'}],
   },
   {
     collection: "users",
+    timestamps: true
   }
 );
 

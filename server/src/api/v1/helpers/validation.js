@@ -107,6 +107,7 @@ const validatePasswordChange = data =>{
     return UserSchema.validate(data);
 }
 
+
 module.exports = {
     validateUser,
     validateRegisterUser,

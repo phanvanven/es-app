@@ -324,7 +324,7 @@ module.exports = {
       return error;
     }
   },
-  changePassword: async({profileID, password, newPassword})=>{
+  changePassword: async ({ profileID, password, newPassword }) => {
     try {
       const user = await UserModel.findOne({ profileID });
       if (!user) {
@@ -347,13 +347,13 @@ module.exports = {
       return {
         status: 200,
         message: "Cập nhật mật khẩu thành công",
-      }
+      };
     } catch (error) {
       console.log(error);
       return error;
     }
   },
-  viewProfile: async({profileID})=>{
+  viewProfile: async ({ profileID }) => {
     try {
       const options = {
         _id: 0,
@@ -364,17 +364,45 @@ module.exports = {
       };
       const user = await UserModel.findOne({ profileID }, options);
       if (!user) {
-        return createError.NotFound("Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!");
+        return createError.NotFound(
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+        );
       }
 
       return {
         status: 200,
         message: "Thông tin tài khoản người dùng",
         user,
-      }
+      };
     } catch (error) {
       console.log(error);
       return error;
     }
-  }
+  },
+  isExist: async (userID) => {
+    try {
+      const options = {
+        _id: 0,
+        isAdmin: 0,
+        __v: 0,
+        verified: 0,
+        password: 0,
+      };
+      const user = await UserModel.findById(userID, options);
+      return user ? user : null;
+    } catch (error) {
+      return error;
+    }
+  },
+  updateFriends: async (_id, options) => {
+    try {
+      const isUpdated = await UserModel.findByIdAndUpdate(
+        _id,
+        options
+      );
+      return isUpdated;
+    } catch (error) {
+      return error;
+    }
+  },
 };

@@ -17,7 +17,8 @@ const PostSchema = new Schema({
     likes: Array,
     like_num: Number,
 }, {
-    collection: 'posts'
+    collection: 'posts',
+    timestamps: true
 });
 
 const PostModel = mongoose.model('posts', PostSchema);
