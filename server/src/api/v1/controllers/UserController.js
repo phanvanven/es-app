@@ -16,7 +16,7 @@ const {
   removeTokenToRedisClient,
 } = require("../services/redis_service");
 const emailService = require("../services/email_service");
-
+const socketService = require('../services/socket_service');
 // Utils
 const validation = require("../helpers/validation");
 const createError = require("http-errors");
@@ -25,6 +25,12 @@ const capitalizeFirstLetter = require("../helpers/user_format");
 const path = require("path");
 
 class UserController {
+  getLoginForm(req, res, next){
+    console.log(__DIRNAME);
+    // return res.sendFile(__DIRNAME + '/api/v1/public/css/login_css.css');
+    return res.sendFile(__DIRNAME + '/api/v1/public/views/login.html');
+  }
+
   async login(req, res, next) {
     try {
       console.log("login router");
@@ -41,6 +47,7 @@ class UserController {
       if (!statusCode.isSuccess(info.status)) {
         throw createError(info);
       }
+      
       return res.status(200).json(info);
     } catch (error) {
       next(error);

@@ -23,31 +23,32 @@ const WHITELIST_REDIS_PASS = process.env.WHITELIST_REDIS_PASS;
 const client = new Redis({
     host: REFRESH_TOKEN_REDIS_HOST,
     port: REFRESH_TOKEN_REDIS_PORT,
-    password: REFRESH_TOKEN_REDIS_PASS
+    password: REFRESH_TOKEN_REDIS_PASS,
 });
 
 const whitelist = new Redis({
     host: WHITELIST_REDIS_HOST,
     port: WHITELIST_REDIS_PORT,
-    password: WHITELIST_REDIS_PASS
+    password: WHITELIST_REDIS_PASS,
+    
 });
 
 const expiredlist = new Redis({
     host: WHITELIST_REDIS_HOST,
     port: WHITELIST_REDIS_PORT,
-    password: WHITELIST_REDIS_PASS
+    password: WHITELIST_REDIS_PASS,
 });
 
 const flaglist = new Redis({
     host: WHITELIST_REDIS_HOST,
     port: WHITELIST_REDIS_PORT,
-    password: WHITELIST_REDIS_PASS
+    password: WHITELIST_REDIS_PASS,
 });
 
 const clientRequests = new Redis({
     host: WHITELIST_REDIS_HOST,
     port: WHITELIST_REDIS_PORT,
-    password: WHITELIST_REDIS_PASS
+    password: WHITELIST_REDIS_PASS,
 });
 
 clientRequests.ping((err, pong)=>{

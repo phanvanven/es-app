@@ -1,7 +1,5 @@
-// const express = require('express');
-// const router = express.Router();
+const createError = require('http-errors');
 const routerV1 = require('../api/v1/routes');
-// const routerV2 = require('../api/v2/routes');
 function route(app){
     app.use('/api/v1/', routerV1);
     // app.use('/api/v2/', routerV2);

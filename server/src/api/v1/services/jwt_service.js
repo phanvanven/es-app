@@ -38,7 +38,7 @@ async function signAccessToken(userID) {
         }
         const secret = process.env.ACCESS_TOKEN_SECRET;
         const options = {
-            expiresIn: '1h'// 1y 1m 1s
+            expiresIn: '15d'// 1y 1m 1s
         }
         jwt.sign(payload, secret, options, (err, token) => {
             if (err) {
@@ -56,7 +56,6 @@ async function signAccessToken(userID) {
 
 // a middleware
 const verifyAccessToken = (req, res, next) => {
-    console.log('verifyAccessToken middleware');
     if (!req.headers['authorization']) {
         return next(createError.Unauthorized());
     }

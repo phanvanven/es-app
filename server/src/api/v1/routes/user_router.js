@@ -4,6 +4,7 @@ const UserController = require('../controllers/UserController');
 const {verifyAccessToken} = require('../services/jwt_service');
 const {checkWhitelist, checkNumberRequest} = require('../services/redis_service');
 
+router.get('/login', UserController.getLoginForm);
 router.post('/login', UserController.login);
 router.post('/register', UserController.register);
 router.delete('/logout', UserController.logout);

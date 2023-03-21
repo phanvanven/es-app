@@ -405,4 +405,12 @@ module.exports = {
       return error;
     }
   },
+  getUserById: async(userID, options)=>{
+    try {
+      const user = await UserModel.findById(userID, options);
+      return user;
+    } catch (error) {
+      return error;
+    }
+  }
 };
