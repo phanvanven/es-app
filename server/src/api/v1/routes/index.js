@@ -9,7 +9,7 @@ const {checkWhitelist} = require('../services/redis_service');
 
 router.use('/chat', chatRouter);
 router.use('/user', userRouter);
-router.use('/friends', friendRouter);
+router.use('/friends', verifyAccessToken, friendRouter);
 // router.use('/friends', verifyAccessToken, checkWhitelist, friendRouter);
 
 module.exports = router;

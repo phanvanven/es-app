@@ -13,6 +13,18 @@ const FriendSchema = new Schema(
         3, //'friends'
       ],
     },
+
+    // OR we can use the struture like below:
+    // userID: { type: Schema.Types.ObjectId, ref: "users" },
+    // status: {
+    //   type: Number,
+    //   enums: [
+    //     0, //'add friend',
+    //     1, //'requested',
+    //     2, //'pending',
+    //     3, //'friends'
+    //   ],
+    // },
   },
   {
     collection: "friends",
@@ -20,5 +32,5 @@ const FriendSchema = new Schema(
   }
 );
 
-const UserVerificationModel = model("friends", FriendSchema);
-module.exports = UserVerificationModel;
+const FriendModel = model("friends", FriendSchema);
+module.exports = FriendModel;

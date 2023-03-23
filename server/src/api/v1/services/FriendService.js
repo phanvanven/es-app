@@ -5,14 +5,15 @@ const FriendModel = require("../models/FriendModel");
 const createError = require("http-errors");
 const UserService = require("../services/UserService");
 const SocketService = require("../services/socket_service");
+
 // Utils
 
 module.exports = {
   request: async ({ requesterID, recipientID }) => {
     try {
       const [requester, recipient] = await Promise.all([
-        UserService.isExist(requesterID),
-        UserService.isExist(recipientID),
+        UserService.getUserById(requesterID),
+        UserService.getUserById(recipientID),
       ]);
 
       if (!requester || !recipient) {
@@ -30,7 +31,7 @@ module.exports = {
       const docA = await FriendModel.findOneAndUpdate(
         { requester: requesterID, recipient: recipientID },
         { $set: { status: 1 } },
-        { upsert: true, new: true }
+        { upsert: true, new: true }// https://www.mongodb.com/docs/manual/reference/method/db.collection.update/#std-label-update-upsert
       );
 
       const docB = await FriendModel.findOneAndUpdate(
@@ -39,14 +40,14 @@ module.exports = {
         { upsert: true, new: true }
       );
 
-      const options1 = { $push: { friends: docA._id } };
-      const options2 = { $push: { friends: docB._id } };
+      const options1 = { $addToSet: { friends: docA._id } };// $addToSet: https://www.mongodb.com/docs/v6.0/reference/operator/update/addToSet/
+      const options2 = { $addToSet: { friends: docB._id } };
 
-      const updatedRequester = await UserService.updateFriends(
+      const updatedRequester = await UserService.updateFriendsById(
         requesterID,
         options1
       );
-      const updatedRecipient = await UserService.updateFriends(
+      const updatedRecipient = await UserService.updateFriendsById(
         recipientID,
         options2
       );
@@ -54,7 +55,7 @@ module.exports = {
       return {
         status: 200,
         message: "Gửi yêu cầu kết bạn thành công.",
-        time: docA.updatedAt
+        time: docA.updatedAt,
       };
     } catch (error) {
       return error;
@@ -62,22 +63,36 @@ module.exports = {
   },
   accept: async ({ recipientID, requesterID }) => {
     try {
-      const updatedRequester = await FriendModel.findOneAndUpdate(
-        { requester: recipientID, recipient: requesterID },
+      const [requester, recipient] = await Promise.all([
+        UserService.getUserById(requesterID),
+        UserService.getUserById(recipientID),
+      ]);
+      if (!requester || !recipient) {
+        return createError.NotFound(
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+        );
+      }
+
+      const docA = await FriendModel.findOneAndUpdate(
+        { requester: requesterID, recipient: recipientID, status: 1 },
         { $set: { status: 3 } },
-        { upsert: true, new: true }
+        { new: true }
       );
-      const updatedRecipient = await FriendModel.findOneAndUpdate(
-        { recipient: recipientID, requester: requesterID },
+
+      const docB = await FriendModel.findOneAndUpdate(
+        { recipient: requesterID, requester: recipientID, status: 2 },
         { $set: { status: 3 } },
-        { upsert: true, new: true }
+        { new: true }
       );
-      
+
+      if(!docA || !docB){
+        return createError('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại!');
+      }
+
       return {
         status: 200,
         message: "Đã chấp nhận yêu cầu kết bạn",
-        time: updatedRecipient.updatedAt
-
+        time: docA.updatedAt,
       };
     } catch (error) {
       return error;
@@ -85,22 +100,39 @@ module.exports = {
   },
   reject: async ({ recipientID, requesterID }) => {
     try {
-      const docA = await FriendModel.findOneAndRemove({
-        requester: requesterID,
-        recipient: recipientID,
-      });
-      const docB = await FriendModel.findOneAndRemove({
-        recipient: requesterID,
-        requester: recipientID,
-      });
+      const [requester, recipient] = await Promise.all([
+        UserService.getUserById(requesterID),
+        UserService.getUserById(recipientID),
+      ]);
+      if (!requester || !recipient) {
+        return createError.NotFound(
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+        );
+      }
+      const docA = await FriendModel.findOneAndUpdate(
+        { requester: requesterID, recipient: recipientID, status: 1 },
+        { $set: { status: 0 } },
+        { new: true }
+      );
+
+      const docB = await FriendModel.findOneAndUpdate(
+        { recipient: requesterID, requester: recipientID, status: 2 },
+        { $set: { status: 0 } },
+        { new: true }
+      );
+
+      if(!docA || !docB){
+        return createError('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại!');
+      }
+
       const options1 = { $pull: { friends: docA._id } };
       const options2 = { $pull: { friends: docB._id } };
 
-      const updateRequester = await UserService.updateFriends(
+      const updatedRequester = await UserService.updateFriendsById(
         requesterID,
         options1
       );
-      const updateRecipient = await UserService.updateFriends(
+      const updatedRecipient = await UserService.updateFriendsById(
         recipientID,
         options2
       );
@@ -108,6 +140,7 @@ module.exports = {
       return {
         status: 200,
         message: "Đã từ chối yêu cầu kết bạn.",
+        time: docA.updatedAt
       };
     } catch (error) {
       return error;

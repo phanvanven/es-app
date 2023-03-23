@@ -2,6 +2,7 @@ const Joi = require('joi');
 const vietnameseRegex = /^([a-vxyỳọáầảấờễàạằệếýộậốũứĩõúữịỗìềểẩớặòùồợãụủíỹắẫựỉỏừỷởóéửỵẳẹèẽổẵẻỡơôưăêâđ]+)((\s{1}[a-vxyỳọáầảấờễàạằệếýộậốũứĩõúữịỗìềểẩớặòùồợãụủíỹắẫựỉỏừỷởóéửỵẳẹèẽổẵẻỡơôưăêâđ]+){1,})$/;
 const phoneNumberRegex = /(^[0-9]{10,11})$/;
 const genderRegex = /(?:nam|nữ)$/;
+const _idRegex = /(^[a-zA-Z0-9]{24,24})$/;
 
 // how to add a new method into the Joi?
 const validateUser = data =>{
@@ -107,6 +108,16 @@ const validatePasswordChange = data =>{
     return UserSchema.validate(data);
 }
 
+const validateUserID = data =>{
+    const UserSchema = Joi.object({
+        userID: Joi
+        .string()
+        .regex(_idRegex)
+        .required(),
+    });
+    return UserSchema.validate(data);
+}
+
 
 module.exports = {
     validateUser,
@@ -114,5 +125,6 @@ module.exports = {
     validateUpdateUser,
     validateEmail,
     validatePassword,
-    validatePasswordChange
+    validatePasswordChange,
+    validateUserID
 }

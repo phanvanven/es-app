@@ -121,7 +121,6 @@ class UserController {
     }
   }
   async updateInformation(req, res, next) {
-    console.log("update router");
     // atomic
     try {
       let { profileID, email, fullName, gender, phone, hidePhone } = req.body;
@@ -159,7 +158,6 @@ class UserController {
   }
   async refreshToken(req, res, next) {
     try {
-      console.log("refreshToken router");
       if (!req.headers["authorization"]) {
         throw createError.Unauthorized();
       }

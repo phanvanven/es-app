@@ -34,11 +34,11 @@ async function verifyToken(token, secret) {
 async function signAccessToken(userID) {
     return new Promise((resolve, reject) => {
         const payload = {
-            userID
+            userID,
         }
         const secret = process.env.ACCESS_TOKEN_SECRET;
         const options = {
-            expiresIn: '15d'// 1y 1m 1s
+            expiresIn: '30d'// 1y 1m 1s
         }
         jwt.sign(payload, secret, options, (err, token) => {
             if (err) {

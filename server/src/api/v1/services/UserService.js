@@ -379,38 +379,55 @@ module.exports = {
       return error;
     }
   },
-  isExist: async (userID) => {
+  updateFriendsById: async (_id, options) => {
     try {
-      const options = {
+      const isUpdated = await UserModel.findByIdAndUpdate(_id, options);
+      return isUpdated;
+    } catch (error) {
+      return error;
+    }
+  },
+  getUserById: async (userID, standard = false, options = null) => {
+    try {
+      if (standard && options) {
+        return await UserModel.findById(userID, options);
+      }
+      const standardOptions = {
         _id: 0,
         isAdmin: 0,
         __v: 0,
         verified: 0,
         password: 0,
       };
-      const user = await UserModel.findById(userID, options);
-      return user ? user : null;
+      return await UserModel.findById(userID, standardOptions);
     } catch (error) {
       return error;
     }
   },
-  updateFriends: async (_id, options) => {
+  getFriendsList: async (userID, status) => {
     try {
-      const isUpdated = await UserModel.findByIdAndUpdate(
-        _id,
-        options
-      );
-      return isUpdated;
+      if (status < 1 || status > 3) {
+        return createError(`${status} Invalid`);
+      }
+      const selections1 = "-_id status";
+      const selections2 = "fullName profileID";
+      const friendList = await UserModel.findOne({ $or: [{_id: userID}, {profileID: userID}]}).populate({
+        path: "friends",
+        match: { status: { $eq: status } },
+        select: selections1,
+        populate: {
+          path: "recipient",// if we used the second structure then this path will be userID
+          // match: {recipient: {$not: {$eq: profileID}}},This parameter is not needed in this case just keep in mind 'not equal' in mongoose
+          select: selections2,
+        },
+      }).select(selections2);
+      return {
+        status: 200,
+        message: "Danh sách bạn bè",
+        friendList,
+      };
     } catch (error) {
       return error;
     }
   },
-  getUserById: async(userID, options)=>{
-    try {
-      const user = await UserModel.findById(userID, options);
-      return user;
-    } catch (error) {
-      return error;
-    }
-  }
 };
