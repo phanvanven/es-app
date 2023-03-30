@@ -39,11 +39,13 @@ module.exports = {
         jwtService.signAccessToken(user._id),
         jwtService.signRefreshToken(user._id),
       ]);
-      console.log(
-        `->>> accessToken: ${accessToken}\n->>> refreshToken: ${refreshToken}`
-      );
+      // console.log(
+      //   `->>> accessToken: ${accessToken}\n->>> refreshToken: ${refreshToken}`
+      // );
       return {
         status: 200,
+        accessToken,
+        refreshToken,
         message: "Đăng nhập thành công",
       };
     } catch (error) {
@@ -387,13 +389,27 @@ module.exports = {
       return error;
     }
   },
+  addConversationById: async ({ userID, chatID }) => {
+    try {
+      const user = await UserModel.findByIdAndUpdate(userID, {
+        $addToSet:{
+          chats: chatID
+        }
+      },{
+        new: true
+      })
+
+      return user;
+    } catch (error) {
+      return error;
+    }
+  },
   getUserById: async (userID, standard = false, options = null) => {
     try {
       if (standard && options) {
         return await UserModel.findById(userID, options);
       }
       const standardOptions = {
-        _id: 0,
         isAdmin: 0,
         __v: 0,
         verified: 0,
@@ -411,16 +427,20 @@ module.exports = {
       }
       const selections1 = "-_id status";
       const selections2 = "fullName profileID";
-      const friendList = await UserModel.findOne({ $or: [{_id: userID}, {profileID: userID}]}).populate({
-        path: "friends",
-        match: { status: { $eq: status } },
-        select: selections1,
-        populate: {
-          path: "recipient",// if we used the second structure then this path will be userID
-          // match: {recipient: {$not: {$eq: profileID}}},This parameter is not needed in this case just keep in mind 'not equal' in mongoose
-          select: selections2,
-        },
-      }).select(selections2);
+      const friendList = await UserModel.findOne({
+        $or: [{ _id: userID }, { profileID: userID }],
+      })
+        .populate({
+          path: "friends",
+          match: { status: { $eq: status } },
+          select: selections1,
+          populate: {
+            path: "recipient", // if we used the second structure then this path will be userID
+            // match: {recipient: {$not: {$eq: profileID}}},This parameter is not needed in this case just keep in mind 'not equal' in mongoose
+            select: selections2,
+          },
+        })
+        .select(selections2);
       return {
         status: 200,
         message: "Danh sách bạn bè",

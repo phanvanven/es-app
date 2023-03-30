@@ -1,6 +1,4 @@
 "use strict";
-// Models
-const FriendModel = require("../models/FriendModel");
 
 // Services
 const FriendService = require("../services/FriendService");
@@ -24,7 +22,6 @@ class FriendController {
           "Bạn không thể tự kết bạn với chính mình được :)))"
         );
       }
-
       const error1 = validation.validateUserID({ userID: requesterID });
       const error2 = validation.validateUserID({ userID: recipientID });
       if (error1.error) {

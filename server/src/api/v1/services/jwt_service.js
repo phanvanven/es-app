@@ -56,11 +56,17 @@ async function signAccessToken(userID) {
 
 // a middleware
 const verifyAccessToken = (req, res, next) => {
+    let token = '';
     if (!req.headers['authorization']) {
-        return next(createError.Unauthorized());
+        token = req.cookies.accessToken;
+        if(!token){
+            return next(createError.Unauthorized());
+        }
+    }else{
+        const authHeader = req.headers['authorization'];
+        token = authHeader.split(' ')[1];
     }
-    const authHeader = req.headers['authorization'];
-    const token = authHeader.split(' ')[1];
+
     jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, payload) => {
         try {
             // terminate and return data back to app.use. which outputs the error

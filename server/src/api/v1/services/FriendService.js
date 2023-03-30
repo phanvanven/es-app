@@ -4,7 +4,7 @@ const FriendModel = require("../models/FriendModel");
 // Services
 const createError = require("http-errors");
 const UserService = require("../services/UserService");
-const SocketService = require("../services/socket_service");
+const ChatService = require("./ChatService");
 
 // Utils
 

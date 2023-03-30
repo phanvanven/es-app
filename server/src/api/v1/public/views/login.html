@@ -13,21 +13,25 @@
 </head>
 
 <body>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script type="module" src="/javascripts/script.js"></script>
     <!------ Include the above in your HEAD tag ---------->
-
     <div class="wrapper fadeInDown">
         <div id="formContent">
             <!-- Tabs Titles -->
 
             <!-- Icon -->
             <div class="fadeIn first">
-                <img src="https://steemitimages.com/400x400/https://res.cloudinary.com/hpiynhbhq/image/upload/v1515937694/qgq17qfr7alwq9hqgkil.png" id="icon" alt="User Icon" />
+                <img src="https://steemitimages.com/400x400/https://res.cloudinary.com/hpiynhbhq/image/upload/v1515937694/qgq17qfr7alwq9hqgkil.png"
+                    id="icon" alt="User Icon" />
             </div>
 
             <!-- Login Form -->
-            <form method="POST" action="/api/v1/user/login"> 
-                <input type="text" id="email" class="fadeIn second" name="email" placeholder="login">
-                <input type="text" id="password" class="fadeIn third" name="password" placeholder="password">
+            <form id="form-login" method="POST" action="/api/v1/user/login">
+                <input type="text" id="email" class="fadeIn second" name="email" placeholder="login"
+                    value="phanvanven1402@gmail.com">
+                <input type="text" id="password" class="fadeIn third" name="password" placeholder="password"
+                    value="PhanVanVen@1402">
                 <input type="submit" class="fadeIn fourth" value="Log In">
             </form>
 
@@ -38,6 +42,40 @@
 
         </div>
     </div>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <script>
+        const formLogin = document.getElementById('form-login');
+        const urlLogin = 'http://localhost:3000/api/v1/user/login'
+        const urlChat = 'http://localhost:3000/api/v1/chat/form-chat'
+        formLogin.addEventListener('submit', (e) => {
+            e.preventDefault();
+            axios
+                .post(urlLogin, {
+                    email: formLogin.email.value,
+                    password: formLogin.password.value
+                })
+                .then(response => {
+                    if (response.data.status === 200) {
+                        localStorage.setItem('accessToken', response.data.accessToken);
+                        // Thiết lập Authorization header cho các request sau này
+                        const authHeader = { Authorization: 'Bearer ' + response.data.accessToken };
+                        axios.defaults.headers.common['authorization'] = `Bearer ${response.data.accessToken}`;
+                        axios
+                            .get(urlChat, { headers: authHeader })
+                            .then(response => {
+                                window.history.replaceState({}, 'form-chat', urlChat);
+                                document.open();
+                                document.write(response.data);
+                                document.close();
+                            })
+                            .catch(error => console.log(error));
+
+                    }
+                })
+                .catch(error => console.log(error));
+
+        })
+    </script>
 </body>
 
 </html>

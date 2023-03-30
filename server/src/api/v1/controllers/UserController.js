@@ -1,7 +1,4 @@
 "use strict";
-// Models
-const UserModel = require("../models/UserModel");
-const UserVerificationModel = require("../models/UserVerificationModel");
 
 // Services
 const UserService = require("../services/UserService");
@@ -16,21 +13,19 @@ const {
   removeTokenToRedisClient,
 } = require("../services/redis_service");
 const emailService = require("../services/email_service");
-const socketService = require('../services/socket_service');
+const ChatService = require("../services/ChatService");
 // Utils
 const validation = require("../helpers/validation");
 const createError = require("http-errors");
 const statusCode = require("../helpers/StatusCode");
 const capitalizeFirstLetter = require("../helpers/user_format");
 const path = require("path");
+const Resize = require("../helpers/Resize");
 
 class UserController {
-  getLoginForm(req, res, next){
-    console.log(__DIRNAME);
-    // return res.sendFile(__DIRNAME + '/api/v1/public/css/login_css.css');
-    return res.sendFile(__DIRNAME + '/api/v1/public/views/login.html');
+  async getLoginForm(req, res, next) {
+    return res.sendFile(__DIRNAME + "/api/v1/public/views/login.html");
   }
-
   async login(req, res, next) {
     try {
       console.log("login router");
@@ -48,6 +43,25 @@ class UserController {
         throw createError(info);
       }
       
+      res.cookie('accessToken', info.accessToken,{
+        maxAge: 60*60*24*30,// hết hạn trong 30 ngày
+        httpOnly: true,
+        // secure: true // chạy local thì comment :))
+      })
+
+      res.cookie('refreshToken', info.refreshToken,{
+        maxAge: 60*60*24*60,// hết hạn trong 60 ngày
+        httpOnly: true,
+        // secure: true // chạy local thì comment :))
+      })
+
+      // res.cookie('cookies', {
+      //   accessToken: info.accessToken,
+      //   refreshToken: info.refreshToken,
+      // }, {
+      //   maxAge: 60 * 60 * 24 * 30, // Hết hạn trong 30 ngày
+      //   httpOnly: true,
+      // });
       return res.status(200).json(info);
     } catch (error) {
       next(error);
@@ -296,6 +310,20 @@ class UserController {
       }
 
       return res.status(200).json(info);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async uploadAvatar(req, res, next) {
+    try {
+      const imagePath = path.join(__DIRNAME, "/public/images");
+      const fileUpload = new Resize(imagePath);
+      if (!req.file) {
+        throw createError('Please provide an image');
+        res.status(401).json({ error: "Please provide an image" });
+      }
+      const filename = await fileUpload.save(req.file.buffer);
+      return res.status(200).json({ status: 200, message: 'Server sends an image', name: filename });
     } catch (error) {
       next(error);
     }
