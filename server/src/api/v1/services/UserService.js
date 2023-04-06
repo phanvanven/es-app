@@ -381,10 +381,56 @@ module.exports = {
       return error;
     }
   },
+  viewMyProfile: async ({ userID }) => {
+    try {
+      const options = {
+        _id: 0,
+        isAdmin: 0,
+        profileID: 0,
+        updateAt: 0,
+        __v: 0,
+        verified: 0,
+        password: 0,
+        friends: 0,
+        chats: 0,
+        groups: 0
+      };
+      const user = await UserModel.findById(userID, options);
+      if (!user) {
+        return createError.NotFound(
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+        );
+      }
+
+      return {
+        status: 200,
+        message: "Thông tin tài khoản người dùng",
+        user,
+      };
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
   updateFriendsById: async (_id, options) => {
     try {
       const isUpdated = await UserModel.findByIdAndUpdate(_id, options);
       return isUpdated;
+    } catch (error) {
+      return error;
+    }
+  },
+  addGroupById: async({userID, groupID})=>{
+    try {
+      const user = await UserModel.findByIdAndUpdate(userID, {
+        $addToSet: {
+          groups: groupID
+        }
+      },{
+        new: true
+      })
+
+      return user;
     } catch (error) {
       return error;
     }
@@ -404,6 +450,7 @@ module.exports = {
       return error;
     }
   },
+  
   getUserById: async (userID, standard = false, options = null) => {
     try {
       if (standard && options) {
@@ -427,7 +474,7 @@ module.exports = {
       }
       const selections1 = "-_id status";
       const selections2 = "fullName profileID";
-      const friendList = await UserModel.findOne({
+      const friendsList = await UserModel.findOne({
         $or: [{ _id: userID }, { profileID: userID }],
       })
         .populate({
@@ -444,10 +491,23 @@ module.exports = {
       return {
         status: 200,
         message: "Danh sách bạn bè",
-        friendList,
+        friendsList,
       };
     } catch (error) {
       return error;
     }
   },
+  getGroupsListById: async({userID})=>{
+    try {
+      const options = {
+        groups: 1
+      }
+      const groupsList = await UserModel.findById(userID, options);
+      return groupsList?groupsList:null
+
+    } catch (error) {
+      return error;
+    }
+  }
 };
+  

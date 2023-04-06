@@ -118,6 +118,16 @@ const validateUserID = data =>{
     return UserSchema.validate(data);
 }
 
+const validateGroupPassword = data =>{
+    const UserSchema = Joi.object({
+        password: Joi
+        .string()
+        .regex(/[a-zA-Z0-9]{4,12}/)
+        .required(),
+    });
+    return UserSchema.validate(data);
+}
+
 
 module.exports = {
     validateUser,
@@ -126,5 +136,6 @@ module.exports = {
     validateEmail,
     validatePassword,
     validatePasswordChange,
-    validateUserID
+    validateUserID,
+    validateGroupPassword
 }

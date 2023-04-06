@@ -64,8 +64,14 @@
 <body>
 
     <ul id="messages"></ul>
-    <input type="hidden" name="uid" id="uid" value="64149a7e94d06e91cc9ca020">
     <form id="form" action="">
+        <input type="text" name="userID" id="userID" placeholder="userID">
+        <input type="text" name="groupID" id="groupID" placeholder="groupID">
+        <input type="text" name="password" id="password" placeholder="password">
+        <select name="chatType" id="chatType">
+            <option value="private">Private</option>
+            <option value="group">Group</option>
+        </select>
         <input type="file" id="file-input" />
         <input id="input" autocomplete="off" /><button>Send</button>
     </form>
@@ -76,8 +82,11 @@
     <script>
         // get accessToken in cookie and set it into extraHeaders
 
-
-        // truy cập http://localhost:3000/api/v1/chat để test
+        /*
+        groupid list:
+        "Tám là Chín": 642e3298c076a09ca44e6131
+        */
+        
         // TEST
         // token của `ven - 63f76f6d34925870607fb829` : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI2M2Y3NmY2ZDM0OTI1ODcwNjA3ZmI4MjkiLCJpYXQiOjE2Nzk1NTQxNTYsImV4cCI6MTY4MjE0NjE1Nn0.4o9mt-WjAuRvAzHurud7OoqbV3wtnRc7Dco7ly7htw4
         // token của `dieu - 64149a7e94d06e91cc9ca020` : eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiI2NDE0OWE3ZTk0ZDA2ZTkxY2M5Y2EwMjAiLCJpYXQiOjE2Nzk1NTQxOTYsImV4cCI6MTY4MjE0NjE5Nn0.rnmanKE9JXiadhoCrzx4uYjnvCLkhhJIw84oIyQ1k1Q
@@ -95,33 +104,51 @@
         var messages = document.getElementById('messages');
         var form = document.getElementById('form');
         var input = document.getElementById('input');
+        const groupID = document.getElementById('groupID');
+        const userID = document.getElementById('userID');
+        const pass = document.getElementById('password');
 
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             if (input.value) {
                 const message = {
                     msg: input.value,
-                    uid: document.getElementById('uid').value,
                 }
-                socket.emit('private_chat', message);
-                var item = document.createElement('li');
-                item.textContent = input.value;
-                messages.appendChild(item);
-                window.scrollTo(0, document.body.scrollHeight);
-                input.value = '';
+                if (groupID.value) {
+                    message["uid"] = groupID.value;
+                    socket.emit('group', message);
+
+                } else if (userID.value) {
+                    message["uid"] = userID.value;
+                    socket.emit('private_chat', message);
+
+                }
+
+                // var item = document.createElement('li');
+                // item.textContent = input.value;
+                // messages.appendChild(item);
+                // window.scrollTo(0, document.body.scrollHeight);
+                // input.value = '';
             }
         });
 
-        // socket.on('private_chat', function (message) {
-        //     var item = document.createElement('li');
-        //     item.textContent = message.msg;
-        //     messages.appendChild(item);
-        //     window.scrollTo(0, document.body.scrollHeight);
-        // });
+        socket.on('chat', function (message) {
+            var item = document.createElement('li');
+            item.textContent = `${message.msg}/${message.uid}/${message.time}`;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        });
 
         socket.on('connect_error', (err) => {
-            item.textContent = err;
             var item = document.createElement('li');
+            item.textContent = err;
+            messages.appendChild(item);
+            window.scrollTo(0, document.body.scrollHeight);
+        })
+
+        socket.on('error', (err) => {
+            var item = document.createElement('li');
+            item.textContent = err.message;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         })

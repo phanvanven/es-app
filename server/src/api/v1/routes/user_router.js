@@ -21,7 +21,7 @@ router.post('/forgot-password', checkNumberRequest, UserController.forgotPasswor
 router.get('/reset-password/:userID/:token', UserController.verifyPassword);
 router.post('/reset-password/:userID/:token', UserController.resetPassword);
 
-router.get('/profile/:profileID', verifyAccessToken, checkNumberRequest, UserController.viewProfile);
+router.get('/:profileID', verifyAccessToken, checkNumberRequest, UserController.viewProfile);
 
 // router.post('/profile', upload.single('avatar'), UserController.uploadAvatar);
 // router.post('/photos', upload.array('photos', 12), UserController.uploadPhotos);

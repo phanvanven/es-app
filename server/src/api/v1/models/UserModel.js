@@ -42,9 +42,9 @@ const UserSchema = new Schema(
     biography: { type: Biography },
     jobs: { type: Job },
     isAdmin: { type: Boolean, default: false },
-    friends: [{ type: Schema.Types.ObjectId, ref: "friends" }],
-    chats: [{ type: Schema.Types.ObjectId, ref: "chats" }],
-    groups: [{ type: Schema.Types.ObjectId, ref: "groups" }],
+    friends: [{ type: Schema.Types.ObjectId, ref: "friends", unique: true }],
+    chats: [{ type: Schema.Types.ObjectId, ref: "chats", unique: true }],
+    groups: [{ type: Schema.Types.ObjectId, ref: "chats", unique: true }],
   },
   {
     collection: "users",

@@ -7,8 +7,10 @@ const { verifyToken } = require("./jwt_service");
 const validation = require("../helpers/validation");
 const path = require("path");
 const { uploadFile, sendFile2 } = require("./FileService");
+const createError = require("http-errors");
 
 class SocketService {
+  //*temporary completed
   // Remember: the value in the heaeders is always lowercase
   async checkSocket(socket, next) {
     try {
@@ -25,34 +27,56 @@ class SocketService {
       return next(new Error(error));
     }
   }
-  connect(socket) {
-    const dir = path.join(__DIRNAME, "api/v1/public");
-    socket.join(socket.id);
-    sendFile2(socket, dir);
+  // middleware
+  async checkWhiteList(socket, next) {}
 
-    socket.on("disconnect", () => {
-      console.log(`->>> User: ${socket.id} disconnected...`);
+  async connect(socket) {
+    const dir = path.join(__DIRNAME, "api/v1/public");
+    sendFile2(socket, dir);
+    socket.join(socket.id);
+
+    // join all of the chat rooms
+    const allGroups = await UserService.getGroupsListById({
+      userID: socket.id,
     });
 
-    // private chat
+    if (allGroups) {
+      for (const group of allGroups["groups"]) {
+        socket.join(group.toString());
+      }
+    }
+
+    //*temporary completed
     socket.on("private_chat", async (message) => {
       try {
         const { uid, msg } = message;
         const receiverID = uid;
         const senderID = socket.id;
         if (!senderID || !receiverID || !msg) {
-          throw new Error("BadRequest");
+          socket.emit('error', {
+            message: "Badrequest"
+          })
+          return;
         }
         if (senderID === receiverID) {
-          throw new Error("BadRequest");
+          socket.emit('error', {
+            message: "Badrequest"
+          })
+          return;
         }
         const error1 = validation.validateUserID({ userID: senderID });
         const error2 = validation.validateUserID({ userID: receiverID });
         if (error1.error) {
-          throw new Error(error1.error.details[0].message);
+          socket.emit('error', {
+            message: error1.error.details[0].message
+          })
+          return;
         }
         if (error2.error) {
-          throw new Error(error2.error.details[0].message);
+          socket.emit('error', {
+            message: error2.error.details[0].message
+          })
+          return;
         }
         const [sender, receiver] = await Promise.all([
           UserService.getUserById(senderID),
@@ -60,85 +84,151 @@ class SocketService {
         ]);
 
         if (!sender || !receiver) {
-          throw new Error("Không tìm thấy người dùng tương ứng");
+          socket.emit('error', {
+            message: "Không tìm thấy người dùng tương ứng"
+          })
+          return;
         }
-
         const conversation = await ChatService.updatePrivateChatById({
           senderID: sender._id,
           receiverID: receiver._id,
-          msg: message.msg
-        })
+          msg: message.msg,
+        });
 
+        if (!conversation) {
+          socket.emit('error', {
+            message: "An error!!!"
+          })
+          return;
+        }
 
         if (!conversation.__v) {
-          console.log('New conversation created');
+          console.log("New conversation created");
           const docA = await UserService.addConversationById({
             userID: sender._id,
             chatID: conversation._id,
-          })
-  
+          });
+
           const docB = await UserService.addConversationById({
             userID: receiver._id,
             chatID: conversation._id,
-          })
-        } 
+          });
+        }
 
-        __IO.to(message.uid).emit("private_chat", {
-          msg: message.msg, 
-          uid: socket.id,
-        });
-
-        socket.emit("private_chat", {
+        __IO.to(message.uid).emit("chat", {
           msg: message.msg,
           uid: socket.id,
+          time: conversation.time,
+        });
+
+        __IO.to(message.uid).emit("new_messages", {
+          msg: message.msg,
+          uid: socket.id,
+          time: conversation.time,
+        });
+
+        socket.emit("chat", {
+          msg: message.msg,
+          uid: socket.id,
+          time: conversation.time,
         });
 
         // end chat
       } catch (error) {
-        console.log(error);
+        socket.emit('error', {
+          message: error
+        })
         return new Error(error);
       }
     });
 
-    // private group chat    
+    //*temporary completed
     socket.on("group", async (message) => {
       try {
-        // start check
         const { uid, msg } = message;
         const groupID = uid;
         const senderID = socket.id;
         if (!senderID || !groupID || !msg) {
-          throw new Error("BadRequest");
+          socket.emit('error', {
+            message: "Badrequest"
+          })
+          return;
         }
         if (senderID === groupID) {
-          throw new Error("Conflict ID");
+          socket.emit('error', {
+            message: "Conflict ID"
+          })
+          return;
         }
         const { error } = validation.validateUserID({ userID: senderID });
         if (error) {
-          throw new Error(error.details[0].message);
+          socket.emit('error', {
+            message: error.details[0].message
+          })
+          return;
         }
 
-        const sender = await UserService.getUserById(senderID);
-        const group = await ChatService.getChatById(groupID);   
+        // const sender = await UserService.getUserById(senderID);
+        // const group = await ChatService.getChatById(groupID);
 
-        if (!sender || !group) {
-          throw new Error("Not Found!!!");
+        // if (!sender || !group) {
+        //   throw new Error("Not Found!!!");
+        // }
+
+        const exist = await ChatService.checkUserExistInChatById({
+          userID: senderID,
+          chatID: groupID
+        })
+
+        if (!exist) {
+          socket.emit('error', {
+            message: "Bạn không thể tham gia vào cuộc trò chuyện này"
+          })
+          return;
         }
 
         const conversation = await ChatService.updateGroupChatById({
           senderID,
           groupID,
-          msg
-        })
+          msg,
+        });
+
+        // the user does not exist in the group or has not yet joined the group
+        if (!conversation) {
+          socket.emit('error', {
+            message: "An error!!!"
+          })
+          return;
+        }
 
         // sending to all clients in 'game' room(channel) except sender
-        socket.broadcast.to(groupID).emit('group', 'nice game');
-
+        socket.broadcast.to(groupID).emit("chat", {
+          msg: message.msg,
+          uid: socket.id,
+          time: conversation.time,
+        });
         
+        socket.broadcast.to(groupID).emit("new_messages", {
+          msg: message.msg,
+          uid: socket.id,
+          time: conversation.time,
+        });
+
+        socket.emit("chat", {
+          msg: message.msg,
+          uid: socket.id,
+          time: conversation.time,
+        });
       } catch (error) {
-        console.log(error);
+        socket.emit('error', {
+          message: error
+        })
         return new Error(error);
       }
+    });
+
+    socket.on("disconnect", () => {
+      console.log(`->>> User: ${socket.id} disconnected...`);
     });
   }
 }

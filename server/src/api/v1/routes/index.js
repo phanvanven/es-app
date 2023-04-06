@@ -10,6 +10,5 @@ const {checkWhitelist} = require('../services/redis_service');
 router.use('/chat', verifyAccessToken, chatRouter);
 router.use('/user', userRouter);
 router.use('/friends', verifyAccessToken, friendRouter);
-// router.use('/friends', verifyAccessToken, checkWhitelist, friendRouter);
 
 module.exports = router;

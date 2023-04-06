@@ -298,10 +298,19 @@ class UserController {
   }
   async viewProfile(req, res, next) {
     try {
-      console.log("getProfile router");
+
       const { profileID } = req.params;
+      const {userID} = req.payload;
+
       if (!profileID) {
         throw createError.BadRequest();
+      }
+
+      const userByID = await UserService.getUserById(userID);
+
+      // view myself
+      if(profileID === userByID.profileID){
+        const info = await UserService.viewMyProfile({userID})
       }
 
       const info = await UserService.viewProfile({ profileID });
