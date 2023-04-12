@@ -8,28 +8,47 @@ const MessageService = require("../services/MessageService");
 // Utils
 
 module.exports = {
-  getChatById: async (chatID, standard = false, options = null) => {
+  getChatById: async ({ userID, chatID, numbers = 1, limit = 20 }) => {
     try {
-      if (standard && options) {
-        return await ChatModel.findOne({ _id: chatID }, options);
+      const data = await ChatModel.findOne({
+        _id: chatID,
+        "members._id": userID,
+      });
+
+      let requestable = true;
+      const length = data.messages.length;
+      let start = length - (limit * numbers);
+      let end = start + limit;
+
+      if (start > 0) {
+        data.messages = data.messages.slice(start, end);
+      } else {
+        requestable = false;
+        if (start < 0 && start > -limit) {
+          data.messages = data.messages.slice(0, limit + start);
+        }else{
+          data.messages = [];
+        }
       }
-      const standardOptions = {
-        __v: 0,
-        password: 0,
+
+      return {
+        status: 200,
+        message: "Hội thoại",
+        conversation: data,
+        requestable: requestable
       };
-      return await ChatModel.findOne({ _id: chatID }, standardOptions);
     } catch (error) {
       return error;
     }
   },
-  checkUserExistInChatById: async({userID, chatID})=>{
+  checkUserExistInChatById: async ({ userID, chatID }) => {
     try {
       const exist = await ChatModel.findOne({
         _id: chatID,
-        "members._id": userID
-      })
+        "members._id": userID,
+      });
 
-      return exist?exist:null;
+      return exist ? exist : null;
     } catch (error) {
       return error;
     }
@@ -51,7 +70,6 @@ module.exports = {
 
       if (!message) {
         return false;
-        
       }
 
       const conversation = await ChatModel.findOneAndUpdate(
@@ -148,25 +166,25 @@ module.exports = {
       if (!message) {
         return false;
       }
-      
+
       const conversation = await ChatModel.findOneAndUpdate(
         {
           _id: groupID,
-          $and:[
-            {"members._id": senderID},{
+          $and: [
+            { "members._id": senderID },
+            {
               $or: [
                 { "members.role": "chatter" },
                 { "members.role": "editor" },
                 { "members.role": "admin" },
               ],
-            }
+            },
           ],
-          
         },
         {
           $push: {
             messages: [message._id],
-          }
+          },
         },
         {
           new: true,
@@ -237,13 +255,13 @@ module.exports = {
 
       await UserService.addConversationById({
         userID: userID,
-        chatID: newGroup._id
-      })
+        chatID: newGroup._id,
+      });
 
       await UserService.addGroupById({
         userID: userID,
-        groupID: newGroup._id
-      })
+        groupID: newGroup._id,
+      });
 
       return {
         status: 200,

@@ -42,18 +42,18 @@ class UserController {
       if (!statusCode.isSuccess(info.status)) {
         throw createError(info);
       }
-      
-      res.cookie('accessToken', info.accessToken,{
-        maxAge: 60*60*24*30,// hết hạn trong 30 ngày
-        httpOnly: true,
-        // secure: true // chạy local thì comment :))
-      })
 
-      res.cookie('refreshToken', info.refreshToken,{
-        maxAge: 60*60*24*60,// hết hạn trong 60 ngày
+      res.cookie("accessToken", info.accessToken, {
+        maxAge: 60 * 60 * 24 * 30, // hết hạn trong 30 ngày
         httpOnly: true,
         // secure: true // chạy local thì comment :))
-      })
+      });
+
+      res.cookie("refreshToken", info.refreshToken, {
+        maxAge: 60 * 60 * 24 * 60, // hết hạn trong 60 ngày
+        httpOnly: true,
+        // secure: true // chạy local thì comment :))
+      });
 
       // res.cookie('cookies', {
       //   accessToken: info.accessToken,
@@ -296,24 +296,24 @@ class UserController {
       next(error);
     }
   }
-  async viewProfile(req, res, next) {
+  async getUser(req, res, next) {
     try {
-
       const { profileID } = req.params;
-      const {userID} = req.payload;
+      const { userID } = req.payload;
 
       if (!profileID) {
         throw createError.BadRequest();
       }
 
-      const userByID = await UserService.getUserById(userID);
-
+      const user = await UserService.getUserById(userID);
+      let info = null;
       // view myself
-      if(profileID === userByID.profileID){
-        const info = await UserService.viewMyProfile({userID})
+      if (profileID === user.profileID) {
+        info = await UserService.getMyProfilebyId({userID});
+      } else {
+        info = await UserService.getProfile({ profileID });
       }
 
-      const info = await UserService.viewProfile({ profileID });
       if (!statusCode.isSuccess(info.status)) {
         throw createError(info);
       }
@@ -328,11 +328,171 @@ class UserController {
       const imagePath = path.join(__DIRNAME, "/public/images");
       const fileUpload = new Resize(imagePath);
       if (!req.file) {
-        throw createError('Please provide an image');
+        throw createError("Please provide an image");
         res.status(401).json({ error: "Please provide an image" });
       }
       const filename = await fileUpload.save(req.file.buffer);
-      return res.status(200).json({ status: 200, message: 'Server sends an image', name: filename });
+      return res
+        .status(200)
+        .json({
+          status: 200,
+          message: "Server sends an image",
+          name: filename,
+        });
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getFriends(req, res, next) {
+    try {
+      const { userID } = req.payload;
+      let { pages } = req.params;
+      // valid number
+
+      if (!userID) {
+        throw createError.BadRequest();
+      }
+
+      const limit = 20;
+      if (pages > 0) {
+        pages = pages * limit;
+      } else {
+        pages = 0;
+      }
+
+      const info = await UserService.getFriends({
+        userID: userID,
+        status: 3,
+        from: pages,
+        limit: limit,
+      });
+
+      if (!statusCode.isSuccess(info.status)) {
+        throw createError(info);
+      }
+
+      return res.status(200).json(info);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getPendingList(req, res, next) {
+    try {
+      const { userID } = req.payload;
+      let { pages } = req.params;
+
+      if (!userID) {
+        throw createError.BadRequest();
+      }
+
+      const limit = 20;
+      if (pages > 0) {
+        pages = pages * limit;
+      } else {
+        pages = 0;
+      }
+
+      const data = await UserService.getFriends({
+        userID: userID,
+        status: 1, // 0: add friend, 1: requested, 2: pending, 3: friend
+        from: pages,
+        limit: limit,
+      });
+      if (!statusCode.isSuccess(data.status)) {
+        throw createError(data);
+      }
+      return res.status(200).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getRequestList(req, res, next) {
+    try {
+      const { userID } = req.payload;
+      let { pages } = req.params;
+
+      if (!userID) {
+        throw createError.BadRequest();
+      }
+
+      const limit = 20;
+      if (pages > 0) {
+        pages = pages * limit;
+      } else {
+        pages = 0;
+      }
+
+      const data = await UserService.getFriends({
+        userID: userID,
+        status: 2, // 0: add friend, 1: requested, 2: pending, 3: friend
+        from: pages,
+        limit: limit,
+      });
+
+      if (!statusCode.isSuccess(data.status)) {
+        throw createError(data);
+      }
+      return res.status(200).json(data);
+    } catch (error) {
+      next(error);
+    }
+  }
+  async getConversations(req, res, next) {
+    try {
+      const { userID } = req.payload;
+      if (!userID) {
+        throw createError.BadRequest();
+      }
+
+      const { chatID } = req.params;
+      let { numbers } = req.params;
+
+      let limit = 20; // 20 messages per request
+      if (!numbers) {
+        numbers = 1;
+      }
+
+      
+      if (!chatID) {
+        let { conversations } = req.cookies;
+        console.log(conversations)
+        if (!conversations) {
+          throw createError.BadRequest();
+        }
+
+        const conversationArray = [];
+
+        for (const chatID of conversations.split("_")) {
+          const info = await ChatService.getChatById({
+            userID: userID,
+            chatID: chatID,
+            numbers: 1,
+            limit: limit,
+          });
+
+          if (statusCode.isSuccess(info.status)) {
+            conversationArray.push(info.conversation);
+          }
+
+        }
+        return res.status(200).json({
+          status: 200,
+          message: "Danh sách các cuộc trò chuyện",
+          conversations: conversationArray
+        })
+      }
+
+      const info = await ChatService.getChatById({
+        userID: userID,
+        chatID: chatID,
+        numbers: numbers,
+        limit: limit,
+      });
+
+      if (!statusCode.isSuccess(info.status)) {
+        throw createError(info);
+      }
+      return res.status(200).json(info);
     } catch (error) {
       next(error);
     }

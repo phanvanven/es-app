@@ -10,8 +10,8 @@ router.post('/login', UserController.login);
 router.post('/register', UserController.register);
 router.delete('/logout', UserController.logout);
 router.post('/refresh-token', UserController.refreshToken);
+router.get('/profile/:profileID', verifyAccessToken, checkNumberRequest, UserController.getUser);
 
-// router.get('/friends', verifyAccessToken, checkNumberRequest, checkWhitelist, UserController.getFriends);
 // router.get('/verify/:token', UserController.verifyEmail); :token -> req.params.token
 router.post('/verify', UserController.verifyEmail);
 router.put('/update-information', verifyAccessToken, UserController.updateInformation);
@@ -21,7 +21,15 @@ router.post('/forgot-password', checkNumberRequest, UserController.forgotPasswor
 router.get('/reset-password/:userID/:token', UserController.verifyPassword);
 router.post('/reset-password/:userID/:token', UserController.resetPassword);
 
-router.get('/:profileID', verifyAccessToken, checkNumberRequest, UserController.viewProfile);
+
+router.get('/friends/list/:pages', verifyAccessToken, UserController.getFriends);
+router.get('/friends/list', verifyAccessToken, UserController.getFriends);
+router.get('/friends/requests', verifyAccessToken, UserController.getRequestList);
+router.get('/friends/pending', verifyAccessToken, UserController.getPendingList);
+
+router.get('/conversations/:chatID/:numbers', verifyAccessToken, UserController.getConversations);
+router.get('/conversations/:chatID', verifyAccessToken, UserController.getConversations);
+router.get('/conversations',verifyAccessToken, UserController.getConversations);
 
 // router.post('/profile', upload.single('avatar'), UserController.uploadAvatar);
 // router.post('/photos', upload.array('photos', 12), UserController.uploadPhotos);

@@ -355,33 +355,7 @@ module.exports = {
       return error;
     }
   },
-  viewProfile: async ({ profileID }) => {
-    try {
-      const options = {
-        _id: 0,
-        isAdmin: 0,
-        __v: 0,
-        verified: 0,
-        password: 0,
-      };
-      const user = await UserModel.findOne({ profileID }, options);
-      if (!user) {
-        return createError.NotFound(
-          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
-        );
-      }
-
-      return {
-        status: 200,
-        message: "Thông tin tài khoản người dùng",
-        user,
-      };
-    } catch (error) {
-      console.log(error);
-      return error;
-    }
-  },
-  viewMyProfile: async ({ userID }) => {
+  getProfile: async ({ profileID }) => {
     try {
       const options = {
         _id: 0,
@@ -395,16 +369,46 @@ module.exports = {
         chats: 0,
         groups: 0
       };
-      const user = await UserModel.findById(userID, options);
+      const user = await UserModel.findOne({ profileID }, options);
       if (!user) {
         return createError.NotFound(
-          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại"
         );
       }
 
       return {
         status: 200,
-        message: "Thông tin tài khoản người dùng",
+        message: `Thông tin tài khoản của ${user.fullName}`,
+        user,
+      };
+    } catch (error) {
+      console.log(error);
+      return error;
+    }
+  },
+  getMyProfilebyId: async ({ userID }) => {
+    try {
+      const options = {
+        _id: 0,
+        isAdmin: 0,
+        updatedAt: 0,
+        __v: 0,
+        verified: 0,
+        password: 0,
+        friends: 0,
+        chats: 0,
+        groups: 0
+      };
+      const user = await UserModel.findById(userID, options);
+      if (!user) {
+        return createError.NotFound(
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!!!!"
+        );
+      }
+
+      return {
+        status: 200,
+        message: "Thông tin tài khoản của bạn",
         user,
       };
     } catch (error) {
@@ -450,7 +454,6 @@ module.exports = {
       return error;
     }
   },
-  
   getUserById: async (userID, standard = false, options = null) => {
     try {
       if (standard && options) {
@@ -461,20 +464,25 @@ module.exports = {
         __v: 0,
         verified: 0,
         password: 0,
+        createAt: 0,
+        updatedAt: 0,
+        friends: 0,
+        chats: 0,
+        groups: 0,
       };
       return await UserModel.findById(userID, standardOptions);
     } catch (error) {
       return error;
     }
   },
-  getFriendsList: async (userID, status) => {
+  getFriends: async ({userID, status, from = 0, limit = 20}) => {
     try {
       if (status < 1 || status > 3) {
         return createError(`${status} Invalid`);
       }
       const selections1 = "-_id status";
       const selections2 = "fullName profileID";
-      const friendsList = await UserModel.findOne({
+      const info = await UserModel.findOne({
         $or: [{ _id: userID }, { profileID: userID }],
       })
         .populate({
@@ -486,12 +494,24 @@ module.exports = {
             // match: {recipient: {$not: {$eq: profileID}}},This parameter is not needed in this case just keep in mind 'not equal' in mongoose
             select: selections2,
           },
+          options: {
+            skip: from,
+            limit: limit + 1
+          }
         })
         .select(selections2);
+      
+      let requestable = true;
+      // danh sách bạn bè đã chạm ngưỡng
+      if(info.friends.length <= limit){
+        requestable = false;
+      }
+
       return {
         status: 200,
         message: "Danh sách bạn bè",
-        friendsList,
+        friends: info.friends,
+        requestable: requestable
       };
     } catch (error) {
       return error;

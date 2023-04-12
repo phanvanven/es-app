@@ -168,13 +168,6 @@ class SocketService {
           return;
         }
 
-        // const sender = await UserService.getUserById(senderID);
-        // const group = await ChatService.getChatById(groupID);
-
-        // if (!sender || !group) {
-        //   throw new Error("Not Found!!!");
-        // }
-
         const exist = await ChatService.checkUserExistInChatById({
           userID: senderID,
           chatID: groupID

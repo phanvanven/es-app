@@ -146,59 +146,6 @@ class FriendController {
       next(error);
     }
   }
-  async getFriendsList(req, res, next) {
-    try {
-      const { userID } = req.payload; // received from the middleware verfifyAccessToken
-
-      if (!userID) {
-        throw createError.BadRequest();
-      }
-
-      const data = await UserService.getFriendsList(userID, 3); // 0: add friend, 1: requested, 2: pending, 3: friend
-      if (!statusCode.isSuccess(data.status)) {
-        throw createError(data);
-      }
-      return res.status(200).json(data);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getRequestList(req, res, next) {
-    try {
-      const { userID } = req.payload;
-
-      if (!userID) {
-        throw createError.BadRequest();
-      }
-
-      const data = await UserService.getFriendsList(userID, 2); // 0: add friend, 1: requested, 2: pending, 3: friend
-      if (!statusCode.isSuccess(data.status)) {
-        throw createError(data);
-      }
-      return res.status(200).json(data);
-    } catch (error) {
-      next(error);
-    }
-  }
-
-  async getPendingList(req, res, next) {
-    try {
-      const { userID } = req.payload;
-
-      if (!userID) {
-        throw createError.BadRequest();
-      }
-
-      const data = await UserService.getFriendsList(userID, 1); // 0: add friend, 1: requested, 2: pending, 3: friend
-      if (!statusCode.isSuccess(data.status)) {
-        throw createError(data);
-      }
-      return res.status(200).json(data);
-    } catch (error) {
-      next(error);
-    }
-  }
 }
 
 module.exports = new FriendController();

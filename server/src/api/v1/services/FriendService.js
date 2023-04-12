@@ -18,7 +18,7 @@ module.exports = {
 
       if (!requester || !recipient) {
         return createError.NotFound(
-          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!!!!!!!!!"
         );
       }
 
@@ -69,7 +69,7 @@ module.exports = {
       ]);
       if (!requester || !recipient) {
         return createError.NotFound(
-          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!!!!!"
         );
       }
 
@@ -106,7 +106,7 @@ module.exports = {
       ]);
       if (!requester || !recipient) {
         return createError.NotFound(
-          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!"
+          "Không tìm thấy thông tin người dùng tương ứng. Xin kiểm tra lại!!!!!"
         );
       }
       const docA = await FriendModel.findOneAndUpdate(
@@ -122,7 +122,7 @@ module.exports = {
       );
 
       if(!docA || !docB){
-        return createError('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại!');
+        return createError('Yêu cầu không hợp lệ. Vui lòng kiểm tra lại!!!!!');
       }
 
       const options1 = { $pull: { friends: docA._id } };
