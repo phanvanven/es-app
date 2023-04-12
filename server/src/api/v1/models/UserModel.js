@@ -45,6 +45,7 @@ const UserSchema = new Schema(
     friends: [{ type: Schema.Types.ObjectId, ref: "friends", unique: true }],
     chats: [{ type: Schema.Types.ObjectId, ref: "chats", unique: true }],
     groups: [{ type: Schema.Types.ObjectId, ref: "chats", unique: true }],
+    posts: [{ type: Schema.Types.ObjectId, ref: "posts", unique: true }],
   },
   {
     collection: "users",

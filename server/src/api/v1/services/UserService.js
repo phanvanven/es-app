@@ -123,7 +123,7 @@ module.exports = {
           "Xác thực email thành công, Vui lòng quay lại trang đăng nhập.",
       };
     } catch (error) {
-      console.log(error);
+      return error;
     }
   },
   updateInformation: async ({
@@ -133,39 +133,43 @@ module.exports = {
     gender,
     phoneNumber,
   }) => {
-    const user = await UserModel.findOneAndUpdate(
-      {
-        $and: [{ profileID }, { email }],
-      },
-      {
-        fullName,
-        gender,
-        "phoneNumber.number": phoneNumber.number,
-        "phoneNumber.hide": phoneNumber.hide,
-        // address
-        // dateOfBirth
-        // avatar
-        // coverImage
-        // biography
-        // hobby
-        // job
-      },
-      {
-        //! upsert: true, if matching document is not found, Mongoose will insert a new document
-        //! - with the specified update values.
-        new: true, // return updated data, false for an old data
-        runValidators: true, // Mongoose will validate the document before saving it to the database.
-        // - based on the validation rules specified in the schema
+    try {
+      const user = await UserModel.findOneAndUpdate(
+        {
+          $and: [{ profileID }, { email }],
+        },
+        {
+          fullName,
+          gender,
+          "phoneNumber.number": phoneNumber.number,
+          "phoneNumber.hide": phoneNumber.hide,
+          // address
+          // dateOfBirth
+          // avatar
+          // coverImage
+          // biography
+          // hobby
+          // job
+        },
+        {
+          //! upsert: true, if matching document is not found, Mongoose will insert a new document
+          //! - with the specified update values.
+          new: true, // return updated data, false for an old data
+          runValidators: true, // Mongoose will validate the document before saving it to the database.
+          // - based on the validation rules specified in the schema
+        }
+      );
+      if (!user) {
+        return createError.Unauthorized();
       }
-    );
-    if (!user) {
-      return createError.Unauthorized();
-    }
 
-    return {
-      status: 200,
-      message: "Cập nhật tài khoản thành công",
-    };
+      return {
+        status: 200,
+        message: "Cập nhật tài khoản thành công",
+      };
+    } catch (error) {
+      return error;
+    }
   },
   refreshToken: async ({ accessToken, refreshToken }) => {
     try {
@@ -367,7 +371,7 @@ module.exports = {
         password: 0,
         friends: 0,
         chats: 0,
-        groups: 0
+        groups: 0,
       };
       const user = await UserModel.findOne({ profileID }, options);
       if (!user) {
@@ -397,7 +401,7 @@ module.exports = {
         password: 0,
         friends: 0,
         chats: 0,
-        groups: 0
+        groups: 0,
       };
       const user = await UserModel.findById(userID, options);
       if (!user) {
@@ -424,15 +428,19 @@ module.exports = {
       return error;
     }
   },
-  addGroupById: async({userID, groupID})=>{
+  addGroupById: async ({ userID, groupID }) => {
     try {
-      const user = await UserModel.findByIdAndUpdate(userID, {
-        $addToSet: {
-          groups: groupID
+      const user = await UserModel.findByIdAndUpdate(
+        userID,
+        {
+          $addToSet: {
+            groups: groupID,
+          },
+        },
+        {
+          new: true,
         }
-      },{
-        new: true
-      })
+      );
 
       return user;
     } catch (error) {
@@ -441,13 +449,17 @@ module.exports = {
   },
   addConversationById: async ({ userID, chatID }) => {
     try {
-      const user = await UserModel.findByIdAndUpdate(userID, {
-        $addToSet:{
-          chats: chatID
+      const user = await UserModel.findByIdAndUpdate(
+        userID,
+        {
+          $addToSet: {
+            chats: chatID,
+          },
+        },
+        {
+          new: true,
         }
-      },{
-        new: true
-      })
+      );
 
       return user;
     } catch (error) {
@@ -475,7 +487,7 @@ module.exports = {
       return error;
     }
   },
-  getFriends: async ({userID, status, from = 0, limit = 20}) => {
+  getFriends: async ({ userID, status, from = 0, limit = 20 }) => {
     try {
       if (status < 1 || status > 3) {
         return createError(`${status} Invalid`);
@@ -496,14 +508,14 @@ module.exports = {
           },
           options: {
             skip: from,
-            limit: limit + 1
-          }
+            limit: limit + 1,
+          },
         })
         .select(selections2);
-      
+
       let requestable = true;
       // danh sách bạn bè đã chạm ngưỡng
-      if(info.friends.length <= limit){
+      if (info.friends.length <= limit) {
         requestable = false;
       }
 
@@ -511,23 +523,69 @@ module.exports = {
         status: 200,
         message: "Danh sách bạn bè",
         friends: info.friends,
-        requestable: requestable
+        requestable: requestable,
       };
     } catch (error) {
       return error;
     }
   },
-  getGroupsListById: async({userID})=>{
+  getGroupsListById: async ({ userID }) => {
     try {
       const options = {
-        groups: 1
-      }
+        groups: 1,
+      };
       const groupsList = await UserModel.findById(userID, options);
-      return groupsList?groupsList:null
-
+      return groupsList ? groupsList : null;
     } catch (error) {
       return error;
     }
-  }
+  },
+  getPostById: async ({ userID, postID }) => {
+    try {
+      const user = await UserModel.findOne({
+        _id: userID,
+        posts: {
+          $in: [postID],
+        },
+      });
+
+      return user ? user : null;
+    } catch (error) {
+      return error;
+    }
+  },
+  pushPostById: async ({ userID, postID }) => {
+    try {
+      const user = await UserModel.findByIdAndUpdate(
+        userID,
+        {
+          $push: {
+            posts: [postID],
+          },
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+
+      return user ? user : null;
+    } catch (error) {
+      return error;
+    }
+  },
+  deletePostById: async ({ userID, postID }) => {
+    try {
+      const isDel = await UserModel.findByIdAndUpdate(userID,{
+        $pull: {
+          posts: postID
+        }
+      }, {
+        new: true
+      })
+      return isDel ? true : false;
+    } catch (error) {
+      return error;
+    }
+  },
 };
-  

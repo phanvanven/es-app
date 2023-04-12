@@ -309,7 +309,7 @@ class UserController {
       let info = null;
       // view myself
       if (profileID === user.profileID) {
-        info = await UserService.getMyProfilebyId({userID});
+        info = await UserService.getMyProfilebyId({ userID });
       } else {
         info = await UserService.getProfile({ profileID });
       }
@@ -332,13 +332,11 @@ class UserController {
         res.status(401).json({ error: "Please provide an image" });
       }
       const filename = await fileUpload.save(req.file.buffer);
-      return res
-        .status(200)
-        .json({
-          status: 200,
-          message: "Server sends an image",
-          name: filename,
-        });
+      return res.status(200).json({
+        status: 200,
+        message: "Server sends an image",
+        name: filename,
+      });
     } catch (error) {
       next(error);
     }
@@ -351,6 +349,10 @@ class UserController {
 
       if (!userID) {
         throw createError.BadRequest();
+      }
+      const user = await UserService.getUserById(userID);
+      if (!user) {
+        throw createError.NotFound("Account doesn't exist");
       }
 
       const limit = 20;
@@ -384,6 +386,10 @@ class UserController {
       if (!userID) {
         throw createError.BadRequest();
       }
+      const user = await UserService.getUserById(userID);
+      if (!user) {
+        throw createError.NotFound("Account doesn't exist");
+      }
 
       const limit = 20;
       if (pages > 0) {
@@ -415,6 +421,11 @@ class UserController {
         throw createError.BadRequest();
       }
 
+      const user = await UserService.getUserById(userID);
+      if (!user) {
+        throw createError.NotFound("Account doesn't exist");
+      }
+
       const limit = 20;
       if (pages > 0) {
         pages = pages * limit;
@@ -444,6 +455,11 @@ class UserController {
         throw createError.BadRequest();
       }
 
+      const user = await UserService.getUserById(userID);
+      if (!user) {
+        throw createError.NotFound("Account doesn't exist");
+      }
+
       const { chatID } = req.params;
       let { numbers } = req.params;
 
@@ -452,10 +468,9 @@ class UserController {
         numbers = 1;
       }
 
-      
       if (!chatID) {
         let { conversations } = req.cookies;
-        console.log(conversations)
+        console.log(conversations);
         if (!conversations) {
           throw createError.BadRequest();
         }
@@ -473,13 +488,12 @@ class UserController {
           if (statusCode.isSuccess(info.status)) {
             conversationArray.push(info.conversation);
           }
-
         }
         return res.status(200).json({
           status: 200,
           message: "Danh sách các cuộc trò chuyện",
-          conversations: conversationArray
-        })
+          conversations: conversationArray,
+        });
       }
 
       const info = await ChatService.getChatById({

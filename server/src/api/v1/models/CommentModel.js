@@ -7,7 +7,7 @@ const CommentSchema = new Schema({
     },
     discuss_id: Number,
     posted: Date,
-    text: String,
+    content: String,
     parent_slug: String,
     score: Number,
     slug: String,

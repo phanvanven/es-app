@@ -53,7 +53,6 @@ module.exports = {
       return error;
     }
   },
-  //*temporary completed
   updatePrivateChatById: async ({ senderID, receiverID, msg }) => {
     try {
       // create a new message

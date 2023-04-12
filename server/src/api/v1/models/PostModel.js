@@ -1,21 +1,20 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-
-
 const PostSchema = new Schema({
-    author: {
-        type: Object
-    },
-    discuss_id: Number,
-    posted: Date,
-    text: String,
-    replies_num: {
-        type: Number,
-        default: 0
-    },
-    likes: Array,
-    like_num: Number,
+    author: {type: Schema.Types.ObjectId, ref: "users", required: true},
+    title: {type: String, trim: true},
+    content: {type: String, trim: true},
+    pinned: Boolean,
+    total_likes: Number,
+    total_commments: Number,
+    likes:[{type: Schema.Types.ObjectId, ref: "users"}],
+    commments: [{type: Schema.Types.ObjectId, ref: "users"}],
+    tags: [{type: Schema.Types.ObjectId, ref: "users"}],
+    status: {
+        type: String,
+        enum: ["active", "deleted", "published", "pending", "approved", "rejected", "archived"]
+    }
 }, {
     collection: 'posts',
     timestamps: true
